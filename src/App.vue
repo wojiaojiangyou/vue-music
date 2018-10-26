@@ -2,6 +2,8 @@
   <div id="app">
     <!--头部-->
     <m-header></m-header>
+    <!--头部选择-->
+    <m-tab></m-tab>
     <!--主体路由展示-->
     <router-view/>
   </div>
@@ -9,6 +11,7 @@
 
 <script>
 import mHeader from '@/components/header'
+import mTab from '@/components/tab'
 
 export default {
   name: 'App',
@@ -16,7 +19,8 @@ export default {
     return {}
   },
   components: {
-    mHeader
+    mHeader,
+    mTab
   },
   created () {
   },
