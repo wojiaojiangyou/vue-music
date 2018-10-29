@@ -1,13 +1,14 @@
 <template lang="html">
   <div class="recommend" ref="recommend">
     <scroll ref="scroll" class="recommend-content" :data="discList">
+      <!--better-scroll滚动选中的父级元素-->
       <div>
         <!--幻灯组件-->
         <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
           <slider>
             <div v-for="(item,index) in recommends " :key="index">
               <a :href="item.linkUrl">
-                <img @load="loadImage" :src="item.picUrl" />
+                <img class="needsclick" @load="loadImage" :src="item.picUrl" />
               </a>
             </div>
           </slider>
@@ -18,7 +19,7 @@
           <ul>
             <li v-for="(item,index) in discList" :key="index" class="item">
               <div class="icon">
-                <img :src="item.imgurl" alt="" width="60" height="60">
+                <img v-lazy="item.imgurl" alt="" width="60" height="60">
               </div>
               <div class="text">
                 <h4 class="name" v-html="item.creator.name"></h4>
@@ -29,6 +30,10 @@
         </div>
         <!--other-->
       </div>
+      <!--loading载入-->
+      <div class="loading-container" v-show="!discList.length">
+        <loading></loading>
+      </div>
     </scroll>
   </div>
 </template>
@@ -38,6 +43,7 @@ import { getRecommend, getDiscList } from '@/api/recommend'
 import { ERR_OK } from '@/api/config'
 import Slider from '@/components/base/slider'
 import Scroll from '@/components/base/scroll'
+import Loading from '@/components/base/loading'
 
 export default {
   name: 'recommend',
@@ -49,12 +55,11 @@ export default {
   },
   components: {
     Slider,
-    Scroll
+    Scroll,
+    Loading
   },
   created () {
-    setTimeout(() => {
-      this.initRecommend()
-    }, 2000)
+    this.initRecommend()
     this.initDiscList()
   },
   methods: {
@@ -84,7 +89,7 @@ export default {
     loadImage () {
       let scroll = this.$refs.scroll
       if (!this.checkImage) {
-        scroll.refresh()
+        scroll.refresh() // 执行下刷新操作
         this.checkImage = true
       }
     }
@@ -141,6 +146,12 @@ export default {
           }
         }
       }
+    }
+    .loading-container{
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      transform: translateY(-50%);
     }
   }
 }
