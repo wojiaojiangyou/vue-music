@@ -5,7 +5,9 @@
     <!--头部选择-->
     <m-tab></m-tab>
     <!--主体路由展示-->
-    <router-view/>
+    <keep-alive>
+      <router-view/>
+    </keep-alive>
   </div>
 </template>
 

@@ -14,7 +14,7 @@ function getParams (data) {
   let url = ''
   for (let key in data) {
     let val = data[key]
-    if (val) url += `&${key}=${encodeURIComponent(val)}`
+    url += `&${key}=${encodeURIComponent(val)}`
   }
   // 去除第一个&符号
   if (url) url = url.substr(1)

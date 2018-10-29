@@ -9,7 +9,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
-
+const axios = require('axios')
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
 
@@ -42,6 +42,24 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before (app) {
+      app.get('/api/getDiscList', (req, res) => {
+        let url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+
+        //  模拟仿照当前url的头部数据或的数据
+        axios.get(url, {
+          headers: {
+            host: 'y.qq.com',
+            referer: 'https://y.qq.com'
+          },
+          params: req.query
+        }).then(result => {
+          res.json(result.data)
+        }).catch(err => {
+          res.json(err)
+        })
+      })
     }
   },
   plugins: [

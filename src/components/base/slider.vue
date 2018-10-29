@@ -108,6 +108,11 @@ export default {
         }
       })
     }
+  },
+  destroyed () {
+    // 清除定时器 释放资源
+    clearTimeout(this.timer)
+    console.log('释放了定时器资源！')
   }
 }
 </script>
