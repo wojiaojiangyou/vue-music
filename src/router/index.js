@@ -4,6 +4,7 @@ import Recommend from '@/components/recommend'
 import Singer from '@/components/singer'
 import Rank from '@/components/rank'
 import Search from '@/components/search'
+import Iconfont from '@/components/iconfont'
 
 Vue.use(Router)
 
@@ -29,6 +30,10 @@ export default new Router({
     {
       path: '/search',
       component: Search
+    },
+    {
+      path: '/iconfont',
+      component: Iconfont
     }
   ]
 })
