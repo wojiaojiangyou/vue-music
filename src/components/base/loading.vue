@@ -1,7 +1,7 @@
 <template lang="html">
   <div class="loading">
     <img src="@/assets/loading.gif" alt="" width="24" height="24"/>
-    <p class="desc">{{title}}</p>
+    <p class="desc" v-show="showDesc">{{title}}</p>
   </div>
 </template>
 
@@ -12,6 +12,10 @@ export default {
     title: {
       type: String,
       default: '正在载入中...'
+    },
+    showDesc: {
+      type: Boolean,
+      default: true
     }
   }
 }

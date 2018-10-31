@@ -1,17 +1,19 @@
 <template lang="html">
-  <scroll class="listview" :data="singerInfo.singerlist">
-    <!--显示列表-->
-    <div class="list-group">
-      <!--标题-->
-      <h2 class="list-group-title">{{showSelectInfo}}</h2>
+  <div class="listview-wrap">
+    <scroll class="listview" :data="singerInfo.singerlist">
       <!--显示列表-->
-      <ul>
-        <li class="list-group-item" v-for="(item,index) in singerInfo.singerlist" :key="index">
-          <img v-lazy="item.singer_pic" class="avatar"/>
-          <span class="name">{{item.singer_name}}</span>
-        </li>
-      </ul>
-    </div>
+      <div class="list-group">
+        <!--标题-->
+        <h2 class="list-group-title">{{showSelectInfo}}</h2>
+        <!--显示列表-->
+        <ul>
+          <li class="list-group-item" v-for="item in singerInfo.singerlist" :key="item.singer_id">
+            <img v-lazy="item.singer_pic" :key="item.singer_pic" class="avatar"/>
+            <span class="name">{{item.singer_name}}</span>
+          </li>
+        </ul>
+      </div>
+    </scroll>
     <!--悬浮菜单-->
     <div class="filter-menu" v-show="isShowFilterMenu" @touchstart.stop='showFilterMenu'>浏览</div>
     <!--包裹菜单-->
@@ -24,19 +26,20 @@
       </transition>
       <transition name='slider' mode='out-in'>
         <!--二级分类菜单-->
-        <div class="categray-wrap" v-if='sonCateGrayKey'>
+        <div class="categray-wrap" v-if='isShowSonGateGray'>
           <scroll class="son-gategray" :data="sonFilterMenus">
             <div>
-              <div class="categray" v-for="(item,index) in sonFilterMenus" :key="index" @click.stop='dealSonMenuClick'>{{item.name}}</div>
+              <div class="categray" :class="{'active':singerParams[sonCateGrayKey]==item.id }" v-for="(item,index) in sonFilterMenus" :key="index" @click.stop='dealSonMenuClick(item)'>{{item.name}}</div>
             </div>
           </scroll>
         </div>
       </transition>
     </div>
-  </scroll>
+  </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import Scroll from '@/components/base/scroll'
 
 export default {
@@ -62,6 +65,7 @@ export default {
   },
   data () {
     return {
+      enabledPullUp: true,
       categrayMap: [
         { key: 'area', title: '地区' },
         { key: 'genre', title: '风格' },
@@ -70,10 +74,12 @@ export default {
       ],
       isShowFilterMenu: true,
       isShowCateGray: false,
+      isShowSonGateGray: false,
       sonCateGrayKey: null
     }
   },
   computed: {
+    ...mapState('singer', ['singerParams']),
     showSelectInfo () {
       let info = this.singerInfo
       let showInfo = ''
@@ -83,7 +89,7 @@ export default {
       // 返回选中的信息
       map.forEach((item, index) => {
         let keyVal = info[item.key] // 拿到当前选中的key的值
-        if (keyVal) {
+        if (keyVal || keyVal === 0) {
           let keyTags = info.tags[item.key] // 拿到tags下面的数组
           let selectKeyInfo = keyTags.find(item => item.id === keyVal) // 找到具体选择的风格
           let str = `${item.title} : ${selectKeyInfo.name}`
@@ -113,11 +119,16 @@ export default {
     showSonFilterMenu (item) {
       this.sonCateGrayKey = item.key
       this.isShowCateGray = false
+      this.isShowSonGateGray = true
       console.log('当前选择的分类', this.sonCateGrayKey)
     },
-    dealSonMenuClick () {
-      this.sonCateGrayKey = null
+    dealSonMenuClick (item) {
+      this.isShowSonGateGray = false
       this.isShowFilterMenu = true
+      this.$emit('refresh', {
+        key: this.sonCateGrayKey,
+        val: item.id
+      })
     }
   }
 }
@@ -126,35 +137,38 @@ export default {
 <style lang="scss">
 @import '@styles/index.scss';
 
-.listview{
+.listview-wrap{
   position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: $color-background;
-  .list-group{
-    padding-bottom: px2rem(60px);
-    .list-group-title{
-      height: px2rem(60px);
-      line-height: px2rem(60px);
-      text-align: center;
-      font-size: $font-size-small;
-      color: $color-text-l;
-      background: $color-highlight-background;
-    }
-    .list-group-item{
-      display: flex;
-      align-items: center;
-      padding: px2rem(40px) 0 0 px2rem(60px);
-      .avatar{
-        width: px2rem(100px);
-        height: px2rem(100px);
-        border-radius: 50%;
-      }
-      .name{
-        margin-left: px2rem(40px);
+  .listview{
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 88px);
+    overflow: hidden;
+    background: $color-background;
+    .list-group{
+      padding-bottom: px2rem(60px);
+      .list-group-title{
+        height: px2rem(60px);
+        line-height: px2rem(60px);
+        text-align: center;
+        font-size: $font-size-small;
         color: $color-text-l;
-        font-size: $font-size-medium;
+        background: $color-highlight-background;
+      }
+      .list-group-item{
+        display: flex;
+        align-items: center;
+        padding: px2rem(40px) 0 0 px2rem(60px);
+        .avatar{
+          width: px2rem(100px);
+          height: px2rem(100px);
+          border-radius: 50%;
+        }
+        .name{
+          margin-left: px2rem(40px);
+          color: $color-text-l;
+          font-size: $font-size-medium;
+        }
       }
     }
   }
@@ -187,6 +201,9 @@ export default {
           background: $color-theme;
           color: white;
           margin-bottom: px2rem(10px);
+          &.active{
+            background: $color-theme-select;
+          }
           &:last-child{
             margin-bottom: 0;
           }

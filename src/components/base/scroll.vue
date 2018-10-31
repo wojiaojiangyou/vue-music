@@ -5,6 +5,7 @@
 </template>
 
 <script>
+import Loading from '@/components/base/loading'
 import BScroll from 'better-scroll'
 
 export default {
@@ -26,6 +27,14 @@ export default {
       default: null
     }
   },
+  data () {
+    return {
+
+    }
+  },
+  components: {
+    Loading
+  },
   mounted () {
     // 初始化scoll
     this.$nextTick(() => {
@@ -37,7 +46,8 @@ export default {
       if (!this.$refs.scrolltemp) return
       this.scroll = new BScroll(this.$refs.scrolltemp, {
         probeType: this.probeType,
-        click: this.click
+        click: this.click,
+        pullUpLoad: this.pullUpLoad
       })
       console.log('当前初始化scroll的信息', this.scroll)
     },
@@ -61,5 +71,14 @@ export default {
 }
 </script>
 
-<style lang="css">
+<style lang="scss">
+@import '@styles/index.scss';
+
+.loading-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: px2rem(60px);
+}
 </style>
