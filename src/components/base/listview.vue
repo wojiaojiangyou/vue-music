@@ -1,19 +1,29 @@
 <template lang="html">
   <div class="listview-wrap">
-    <scroll class="listview" :data="singerInfo.singerlist">
+    <scroll class="listview"
+      :listenr-scroll='true'
+      :probe-type='3'
+      @scroll="listenScroll"
+      ref="listview"
+      :data="singerInfo.singerlist"
+    >
       <!--显示列表-->
       <div class="list-group">
         <!--标题-->
         <h2 class="list-group-title">{{showSelectInfo}}</h2>
         <!--显示列表-->
         <ul>
-          <li class="list-group-item" v-for="item in singerInfo.singerlist" :key="item.singer_id">
+          <li class="list-group-item" ref="listitems" v-for="item in singerInfo.singerlist" :key="item.singer_id">
             <img v-lazy="item.singer_pic" :key="item.singer_pic" class="avatar"/>
             <span class="name">{{item.singer_name}}</span>
           </li>
         </ul>
       </div>
     </scroll>
+    <!--歌手首个文字提示-->
+    <transition name='fade' mode='out-in'>
+      <div class="singer-name-tip" v-show="firstSingerName && isShowSingerName">{{firstSingerName}}</div>
+    </transition>
     <!--悬浮菜单-->
     <div class="filter-menu" v-show="isShowFilterMenu" @touchstart.stop='showFilterMenu'>浏览</div>
     <!--包裹菜单-->
@@ -27,11 +37,11 @@
       <transition name='slider' mode='out-in'>
         <!--二级分类菜单-->
         <div class="categray-wrap" v-if='isShowSonGateGray'>
-          <scroll class="son-gategray" :data="sonFilterMenus">
+          <scroll-one class="son-gategray" :data="sonFilterMenus">
             <div>
               <div class="categray" :class="{'active':singerParams[sonCateGrayKey]==item.id }" v-for="(item,index) in sonFilterMenus" :key="index" @click.stop='dealSonMenuClick(item)'>{{item.name}}</div>
             </div>
-          </scroll>
+          </scroll-one>
         </div>
       </transition>
     </div>
@@ -75,7 +85,9 @@ export default {
       isShowFilterMenu: true,
       isShowCateGray: false,
       isShowSonGateGray: false,
-      sonCateGrayKey: null
+      isShowSingerName: false,
+      sonCateGrayKey: null,
+      singerNameIndex: 0
     }
   },
   computed: {
@@ -106,12 +118,63 @@ export default {
       if (sonSelectKey) finalTypes = info.tags[sonSelectKey]
       console.log('选择完分类后的获取的tags数组', finalTypes)
       return finalTypes
+    },
+    firstSingerName () {
+      let singerlist = this.singerInfo.singerlist
+      let singerNameIndex = this.singerNameIndex
+      let name = singerlist ? singerlist[singerNameIndex] : null
+      return name ? name.singer_name.substr(0, 1) : null
     }
   },
   components: {
-    Scroll
+    Scroll,
+    ScrollOne: Scroll
+  },
+  watch: {
+    singerInfo () {
+      // 当信息发生变化的时候的需要重新获取高度
+      this._getListItemsHeight()
+    }
+  },
+  created () {
+    this.listItemsH = []
+    this.listItemTotalH = 0
+  },
+  mounted () {
+    // 等待列表渲染完毕后获得高度
+    setTimeout(() => {
+      this._getListItemsHeight()
+    }, 300)
   },
   methods: {
+    listenScroll (pos) {
+      let newY = pos.y
+      // 判断是否是开始
+      if (newY > 0) {
+        this.singerNameIndex = 0
+        return
+      }
+      // 判断移动的位置
+      let listItemsH = this.listItemsH
+      let totalH = this.listItemTotalH
+      for (let i = 0; i < listItemsH.length - 1; i++) {
+        let height1 = listItemsH[i] // 每个列表的上限
+        let height2 = listItemsH[i + 1] // 每个列表的下线
+        // 当移动到某个区间内
+        if (!height2 || (-newY >= height1 && -newY < height2)) {
+          this.singerNameIndex = i
+          break
+        }
+      }
+      // 当移动到最底部继续移动时设置为最后一个索引
+      if (-newY > totalH) this.singerNameIndex = listItemsH.length - 1
+      // 判断是否显示歌手缩写
+      this.isShowSingerName = true
+      if (this.singerNameTimer) clearTimeout(this.singerNameTimer)
+      this.singerNameTimer = setTimeout(() => {
+        this.isShowSingerName = false
+      }, 300)
+    },
     showFilterMenu () {
       this.isShowFilterMenu = false
       this.isShowCateGray = true
@@ -129,6 +192,19 @@ export default {
         key: this.sonCateGrayKey,
         val: item.id
       })
+    },
+    _getListItemsHeight () {
+      let listItems = this.$refs.listitems
+      if (!listItems) return
+      let height = 30
+      let listItemsH = this.listItemsH
+      listItemsH.push(height)
+      listItems.forEach((item, index) => {
+        height += item.clientHeight
+        listItemsH.push(height)
+      })
+      // 设置总高度
+      this.listItemTotalH = height
     }
   }
 }
@@ -171,6 +247,20 @@ export default {
         }
       }
     }
+  }
+  .singer-name-tip{
+    position: fixed;
+    top: 50%;
+    left:50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%,-50%);
+    width: px2rem(80px);
+    height: px2rem(80px);
+    border-radius: 50%;
+    background: $color-highlight-background;
+    color: white;
   }
   .filter-menu{
     position: fixed;

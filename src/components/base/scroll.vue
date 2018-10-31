@@ -21,6 +21,10 @@ export default {
       type: Boolean,
       default: true
     },
+    listenrScroll: {
+      type: Boolean,
+      default: false
+    },
     // 数据
     data: {
       type: Array,
@@ -29,7 +33,6 @@ export default {
   },
   data () {
     return {
-
     }
   },
   components: {
@@ -50,12 +53,25 @@ export default {
         pullUpLoad: this.pullUpLoad
       })
       console.log('当前初始化scroll的信息', this.scroll)
+      // 是否监听滚动
+      if (this.listenrScroll) {
+        console.log('------启动了滚动监听-------')
+        this.scroll.on('scroll', (pos) => {
+          this.$emit('scroll', pos)
+        })
+      }
     },
     enable () {
       this.scroll && this.scroll.enable()
     },
     disable () {
       this.scroll && this.scroll.disable()
+    },
+    scrollTo () {
+      this.scroll && this.scroll.scrollTo.apply(this.scroll, arguments)
+    },
+    scrollToElement () {
+      this.scroll && this.scroll.scrollToElement.apply(this.scroll, arguments)
     },
     refresh () {
       this.scroll && this.scroll.refresh()
