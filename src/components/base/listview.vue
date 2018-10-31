@@ -20,6 +20,10 @@
         </ul>
       </div>
     </scroll>
+    <!--头部固定显示信息-->
+    <div class="fixed-header" v-show="isShowFixedTitle">
+      <h2 class="fixed-title">{{showSelectInfo}}</h2>
+    </div>
     <!--歌手首个文字提示-->
     <transition name='fade' mode='out-in'>
       <div class="singer-name-tip" v-show="firstSingerName && isShowSingerName">{{firstSingerName}}</div>
@@ -45,12 +49,19 @@
         </div>
       </transition>
     </div>
+    <!--loading载入-->
+    <div class="loading-container" v-show="!singerInfo.singerlist">
+      <loading></loading>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import Scroll from '@/components/base/scroll'
+import Loading from '@/components/base/loading'
+
+const FIXED_TITLE_H = 30
 
 export default {
   name: 'listview',
@@ -86,8 +97,10 @@ export default {
       isShowCateGray: false,
       isShowSonGateGray: false,
       isShowSingerName: false,
+      isShowFixedTitle: false,
       sonCateGrayKey: null,
-      singerNameIndex: 0
+      singerNameIndex: 0,
+      scrollY: 0
     }
   },
   computed: {
@@ -128,27 +141,16 @@ export default {
   },
   components: {
     Scroll,
-    ScrollOne: Scroll
+    ScrollOne: Scroll,
+    Loading
   },
   watch: {
     singerInfo () {
       // 当信息发生变化的时候的需要重新获取高度
       this._getListItemsHeight()
-    }
-  },
-  created () {
-    this.listItemsH = []
-    this.listItemTotalH = 0
-  },
-  mounted () {
-    // 等待列表渲染完毕后获得高度
-    setTimeout(() => {
-      this._getListItemsHeight()
-    }, 300)
-  },
-  methods: {
-    listenScroll (pos) {
-      let newY = pos.y
+    },
+    scrollY (newVal) {
+      let newY = newVal
       // 判断是否是开始
       if (newY > 0) {
         this.singerNameIndex = 0
@@ -174,6 +176,24 @@ export default {
       this.singerNameTimer = setTimeout(() => {
         this.isShowSingerName = false
       }, 300)
+    }
+  },
+  created () {
+    this.listItemsH = []
+    this.listItemTotalH = 0
+  },
+  mounted () {
+    // 等待列表渲染完毕后获得高度
+    setTimeout(() => {
+      this._getListItemsHeight()
+    }, 300)
+  },
+  methods: {
+    listenScroll (pos) {
+      this.scrollY = pos.y
+      // 判断是否显示固定的头部
+      if (-this.scrollY >= FIXED_TITLE_H) this.isShowFixedTitle = true
+      else this.isShowFixedTitle = false
     },
     showFilterMenu () {
       this.isShowFilterMenu = false
@@ -213,6 +233,15 @@ export default {
 <style lang="scss">
 @import '@styles/index.scss';
 
+@mixin fixedTitle () {
+  height: px2rem(60px);
+  line-height: px2rem(60px);
+  text-align: center;
+  font-size: $font-size-small;
+  color: $color-text-l;
+  background: $color-highlight-background;
+}
+
 .listview-wrap{
   position: relative;
   .listview{
@@ -224,12 +253,7 @@ export default {
     .list-group{
       padding-bottom: px2rem(60px);
       .list-group-title{
-        height: px2rem(60px);
-        line-height: px2rem(60px);
-        text-align: center;
-        font-size: $font-size-small;
-        color: $color-text-l;
-        background: $color-highlight-background;
+        @include fixedTitle()
       }
       .list-group-item{
         display: flex;
@@ -246,6 +270,15 @@ export default {
           font-size: $font-size-medium;
         }
       }
+    }
+  }
+  .fixed-header{
+    position: absolute;
+    top: 0;
+    left:0;
+    width: 100%;
+    .fixed-title{
+      @include fixedTitle()
     }
   }
   .singer-name-tip{
@@ -305,6 +338,12 @@ export default {
           overflow: hidden;
         }
     }
+  }
+  .loading-container{
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    transform: translateY(-50%);
   }
 }
 </style>
