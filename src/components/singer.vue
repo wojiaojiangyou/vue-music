@@ -1,11 +1,15 @@
 <template lang="html">
   <div class="singer-wrap">
-    <list-view :singer-info="singerInfo" @refresh="_initSingerList"></list-view>
+    <list-view :singer-info="singerInfo" @select='selectSinger' @refresh="_initSingerList"></list-view>
+    <!--路由-->
+    <transition name="slider" mode="out-in">
+      <router-view></router-view>
+    </transition>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
 import { getSingerList } from '@/api/singer'
 import { ERR_OK } from '@/api/config'
 import listView from '@/components/base/listview'
@@ -18,7 +22,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('singer', ['singerParams'])
+    ...mapGetters('singer', ['singerParams'])
   },
   created () {
     this._initSingerList()
@@ -27,9 +31,21 @@ export default {
     listView
   },
   methods: {
+    ...mapMutations('singer', {
+      setSingerParams: 'SET_SINGER_PARAMS',
+      setSingerInfo: 'SET_SINGER_INFO'
+    }),
+    selectSinger (singer) {
+      // 设置歌手信息
+      this.setSingerInfo(singer)
+
+      this.$router.push({
+        path: `/singer/${singer.singer_mid}`
+      })
+    },
     async _initSingerList (params) {
       // 是否要更新查询参数
-      this.$store.commit('singer/SET_SINGER_PARAMS', params)
+      this.setSingerParams(params)
       try {
         let res = await getSingerList(this.singerParams)
         console.log('当前歌手返回的原始数据', res)

@@ -1,0 +1,2 @@
+export const SET_SINGER_PARAMS = 'SET_SINGER_PARAMS'
+export const SET_SINGER_INFO = 'SET_SINGER_INFO'

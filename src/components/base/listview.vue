@@ -13,7 +13,7 @@
         <h2 class="list-group-title">{{showSelectInfo}}</h2>
         <!--显示列表-->
         <ul>
-          <li class="list-group-item" ref="listitems" v-for="item in singerInfo.singerlist" :key="item.singer_id">
+          <li class="list-group-item" ref="listitems" @click.stop="selectSinger(item)" v-for="item in singerInfo.singerlist" :key="item.singer_id">
             <img v-lazy="item.singer_pic" :key="item.singer_pic" class="avatar"/>
             <span class="name">{{item.singer_name}}</span>
           </li>
@@ -189,6 +189,9 @@ export default {
     }, 300)
   },
   methods: {
+    selectSinger (singer) {
+      this.$emit('select', singer)
+    },
     listenScroll (pos) {
       this.scrollY = pos.y
       // 判断是否显示固定的头部
@@ -317,13 +320,14 @@ export default {
     font-size: $font-size-medium;
     .categray-wrap{
         .categray{
-          width: px2rem(100px);
+          width: px2rem(80px);
           height: px2rem(80px);
           line-height: px2rem(80px);
           text-align: center;
           background: $color-theme;
           color: white;
           margin-bottom: px2rem(10px);
+          border-radius: 50%;
           &.active{
             background: $color-theme-select;
           }
