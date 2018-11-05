@@ -19,7 +19,7 @@
       <!--歌曲信息列表-->
       <scroll class="list" :data="songs" ref="list" @scroll="setScrollY" :listenr-scroll="true" :probe-type="3">
         <div class="song-list-wrap">
-          <song-list :songs="songs"></song-list>
+          <song-list @select='selectItem' :songs="songs"></song-list>
         </div>
         <!--loading包裹-->
         <div class="loading-container" v-show="!songs.length">
@@ -34,6 +34,7 @@ import Scroll from '@/components/base/scroll'
 import SongList from '@/components/base/song-list'
 import Loading from '@/components/base/loading'
 import { prefixStyle } from '@/common/js/dom'
+import { mapActions } from 'vuex'
 
 const TABBAR_H = 40
 const TRANSFORM = prefixStyle('transform')
@@ -117,9 +118,17 @@ export default {
     }
   },
   methods: {
+    selectItem (item, index) {
+      // 调用正常播放页面
+      this.selectPlay({
+        list: this.songs,
+        index: index
+      })
+    },
     setScrollY (pos) {
       this.scrollY = pos.y
-    }
+    },
+    ...mapActions('player', ['selectPlay'])
   }
 }
 </script>

@@ -8,12 +8,15 @@
     <keep-alive>
       <router-view/>
     </keep-alive>
+    <!--播放器-->
+    <player></player>
   </div>
 </template>
 
 <script>
 import mHeader from '@/components/header'
 import mTab from '@/components/tab'
+import Player from '@/components/player'
 
 export default {
   name: 'App',
@@ -22,7 +25,8 @@ export default {
   },
   components: {
     mHeader,
-    mTab
+    mTab,
+    Player
   },
   created () {
   },
