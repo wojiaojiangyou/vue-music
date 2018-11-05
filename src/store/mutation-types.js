@@ -1,2 +1,10 @@
 export const SET_SINGER_PARAMS = 'SET_SINGER_PARAMS'
 export const SET_SINGER_INFO = 'SET_SINGER_INFO'
+
+// 音乐播放器状态操作标识
+export const SET_PLAYING_STATE = 'SET_PLAYING_STATE'
+export const SET_FULL_SCREEN = 'SET_FULL_SCREEN'
+export const SET_PLAY_LIST = 'SET_PLAY_LIST'
+export const SET_SEQUENCE_LIST = 'SET_SEQUENCE_LIST'
+export const SET_PLAY_MODE = 'SET_PLAY_MODE'
+export const SET_CURRENT_INDEX = 'SET_CURRENT_INDEX'
