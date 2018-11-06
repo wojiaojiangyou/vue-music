@@ -1,11 +1,12 @@
 <template lang="html">
   <div class="player" v-show="playList.length">
     <!--大屏播放方式-->
-    <!-- @enter="enter"
-    @after-enter="after-enter"
-    @leave="leave"
-    @after-leave="after-leave" -->
-    <transition name="normal">
+    <transition name="normal"
+                @enter="enter"
+                @after-enter="afteEnter"
+                @leave="leave"
+                @after-leave="afterLeave"
+    >
       <div class="normal-player" v-show="fullScreen">
         <!--背景图片-->
         <div class="background">
@@ -23,7 +24,7 @@
         <div class="middle">
           <!--一级页面-->
           <div class="middle-l">
-            <div class="cd-wrapper">
+            <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd">
                 <img :src="currentSong.image" alt="" class="image">
               </div>
@@ -71,7 +72,11 @@
 </template>
 
 <script>
+import animations from 'create-keyframe-animation'
 import { mapGetters, mapMutations } from 'vuex'
+import { prefixStyle } from '@/common/js/dom'
+
+const transform = prefixStyle('transform')
 
 export default {
   name: 'player',
@@ -88,6 +93,61 @@ export default {
     },
     open () {
       this.setFullScreen(true)
+    },
+    enter (el, done) {
+      const { x, y, scale } = this._getPosAndScale()
+      // 声明动画对象
+      let animationObj = {
+        0: {
+          transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+        },
+        60: {
+          transform: `translate3d(0,0,0) scale(1.1)`
+        },
+        100: {
+          transform: `translate3d(0,0,0) scale(1)`
+        }
+      }
+      // 注册JS创建动画
+      animations.registerAnimation({
+        name: 'move',
+        animation: animationObj,
+        presets: {
+          duration: 400,
+          easing: 'linear'
+        }
+      })
+      // 启动动画
+      let cdWrapperEl = this.$refs.cdWrapper
+      animations.runAnimation(cdWrapperEl, 'move', done)
+    },
+    afteEnter () {
+      // 取消动画注册
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
+    leave (el, done) {
+      const {x, y, scale} = this._getPosAndScale()
+      let cdWrapperEl = this.$refs.cdWrapper
+      cdWrapperEl.style.transition = 'all 0.4s'
+      cdWrapperEl.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+      cdWrapperEl.addEventListener('transitionend', done) // 监听动画完成函数执行done函数
+    },
+    afterLeave () {
+      let cdWrapperEl = this.$refs.cdWrapper
+      cdWrapperEl.style.transition = ''
+      cdWrapperEl.style[transform] = ''
+    },
+    _getPosAndScale () {
+      const targetWidth = 40 // 底部mini的专辑图标宽度
+      const paddingLeft = 40 // 底部mini的专辑图距离左边的距离
+      const paddingbBottom = 30 // 底部mini的专辑图标距离底部的距离
+      const paddingTop = 80 // 中间的专辑图标距离顶部的距离
+      const width = window.innerWidth * 0.8 // 算出当前中间图标的宽度 因为设置的为80%
+      const scale = targetWidth / width // 小图标占大图标的百分比
+      const x = -(window.innerWidth / 2 - paddingLeft) // x轴偏移量
+      const y = window.innerHeight - paddingTop - paddingbBottom - width / 2 // y轴的偏移量
+      return { x, y, scale }
     },
     ...mapMutations('player', {
       setFullScreen: 'SET_FULL_SCREEN'
