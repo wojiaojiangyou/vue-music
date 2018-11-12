@@ -33,6 +33,13 @@
         </div>
         <!--底部操作部分-->
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{_format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent"></progress-bar>
+            </div>
+            <span class="time time-r">{{_format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
@@ -72,12 +79,13 @@
       </div>
     </transition>
     <!--音乐播放器-->
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="timeUpdate"></audio>
   </div>
 </template>
 
 <script>
 import animations from 'create-keyframe-animation'
+import ProgressBar from '@/components/base/progress-bar'
 import { mapGetters, mapMutations } from 'vuex'
 import { prefixStyle } from '@/common/js/dom'
 
@@ -87,8 +95,12 @@ export default {
   name: 'player',
   data () {
     return {
-      songReady: false
+      songReady: false,
+      currentTime: 0
     }
+  },
+  components: {
+    ProgressBar
   },
   computed: {
     addCls () {
@@ -102,6 +114,9 @@ export default {
     },
     miniIcon () {
       return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    percent () {
+      return this.currentTime / this.currentSong.duration
     },
     ...mapGetters('player', [
       'playing',
@@ -160,6 +175,9 @@ export default {
     error () {
       this.songReady = true // 当歌曲加载失败的时候也能执行切换歌曲操作
     },
+    timeUpdate (e) {
+      this.currentTime = e.target.currentTime
+    },
     enter (el, done) {
       const { x, y, scale } = this._getPosAndScale()
       // 声明动画对象
@@ -217,6 +235,15 @@ export default {
       const x = -(window.innerWidth / 2 - paddingLeft) // x轴偏移量
       const y = window.innerHeight - paddingTop - paddingbBottom - width / 2 // y轴的偏移量
       return { x, y, scale }
+    },
+    _format (time) {
+      let min = Math.floor(Math.floor(time) / 60)
+      let sec = Math.floor(Math.floor(time) % 60)
+      let _padTime = this._padTime
+      return `${_padTime(min)}:${_padTime(sec)}`
+    },
+    _padTime (num) {
+      return Number(num) < 10 ? '0' + num : num
     },
     ...mapMutations('player', {
       setFullScreen: 'SET_FULL_SCREEN',
@@ -327,6 +354,29 @@ export default {
       position: absolute;
       bottom: px2rem(100px);
       width: 100%;
+      .progress-wrapper{
+        display: flex;
+        align-items: center;
+        width: 80%;
+        margin: 0 auto;
+        padding: px2rem(20px) 0;
+        .time{
+          color: $color-text;
+          font-size: $font-size-small;
+          flex: 0 0 px2rem(60px);
+          width: px2rem(60px);
+          &.time-l{
+            text-align: left;
+          }
+          &.time-r{
+            text-align: right;
+          }
+        }
+        .progress-bar-wrapper{
+          flex:1;
+          margin: 0 px2rem(10px);
+        }
+      }
       .operators{
         display: flex;
         align-items: center;
