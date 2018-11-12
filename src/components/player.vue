@@ -25,7 +25,7 @@
           <!--一级页面-->
           <div class="middle-l">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd">
+              <div class="cd" :class='addCls'>
                 <img :src="currentSong.image" alt="" class="image">
               </div>
             </div>
@@ -37,17 +37,17 @@
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left">
-              <i class="icon-prev"></i>
+            <div class="icon i-left" :class="disabeCls">
+              <i @click.stop="prev" class="icon-prev"></i>
             </div>
-            <div class="icon i-center">
-              <i  class="icon-play"></i>
+            <div class="icon i-center" :class="disabeCls">
+              <i @click.stop="togglePlay" :class="playIcon"></i>
+            </div>
+            <div class="icon i-right" :class="disabeCls">
+              <i  @click.stop="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-next"></i>
-            </div>
-            <div class="icon i-right">
-              <i class="icon-favorite"></i>
+              <i class="icon-not-favorite"></i>
             </div>
           </div>
         </div>
@@ -57,17 +57,22 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click.stop='open'>
         <div class="icon">
-          <img width="40" height="40" :src="currentSong.image">
+          <img :class="addCls" width="40" height="40" :src="currentSong.image">
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
+          <i @click.stop="togglePlay" :class="miniIcon"></i>
+        </div>
+        <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <!--音乐播放器-->
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
   </div>
 </template>
 
@@ -80,12 +85,47 @@ const transform = prefixStyle('transform')
 
 export default {
   name: 'player',
+  data () {
+    return {
+      songReady: false
+    }
+  },
   computed: {
+    addCls () {
+      return this.playing ? 'play' : 'play pause'
+    },
+    disabeCls () {
+      return this.songReady ? '' : 'disable'
+    },
+    playIcon () {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniIcon () {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
     ...mapGetters('player', [
+      'playing',
       'playList',
       'fullScreen',
-      'currentSong'
+      'currentSong',
+      'currentIndex'
     ])
+  },
+  watch: {
+    currentSong () {
+      // 当DOM加载完毕后获取播放器
+      this.$nextTick(() => {
+        let audio = this.$refs.audio
+        audio.play()
+      })
+    },
+    playing (newPlayState) {
+      // 当DOM加载完毕后获取播放器
+      this.$nextTick(() => {
+        let audio = this.$refs.audio
+        newPlayState ? audio.play() : audio.pause()
+      })
+    }
   },
   methods: {
     back () {
@@ -93,6 +133,32 @@ export default {
     },
     open () {
       this.setFullScreen(true)
+    },
+    ready () {
+      this.songReady = true
+    },
+    next () {
+      if (!this.songReady) return // 没有加载好直接return
+      let index = this.currentIndex + 1
+      if (index === this.playList.length) { // 判断界限
+        index = 0
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) this.togglePlay() // 切换歌曲的时候如果是停止状态就改变状态
+      this.songReady = false // 切换一首歌把歌曲转改变为false 为下首歌加载完毕做个标志位
+    },
+    prev () {
+      if (!this.songReady) return // 没有加载好直接return
+      let index = this.currentIndex - 1
+      if (index === 0) { // 判断界限
+        index = this.playList.length
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) this.togglePlay() // 切换歌曲的时候如果是停止状态就改变状态
+      this.songReady = false // 切换一首歌把歌曲转改变为false 为下首歌加载完毕做个标志位
+    },
+    error () {
+      this.songReady = true // 当歌曲加载失败的时候也能执行切换歌曲操作
     },
     enter (el, done) {
       const { x, y, scale } = this._getPosAndScale()
@@ -138,6 +204,9 @@ export default {
       cdWrapperEl.style.transition = ''
       cdWrapperEl.style[transform] = ''
     },
+    togglePlay () {
+      this.setPlayingState(!this.playing)
+    },
     _getPosAndScale () {
       const targetWidth = 40 // 底部mini的专辑图标宽度
       const paddingLeft = 40 // 底部mini的专辑图距离左边的距离
@@ -150,7 +219,9 @@ export default {
       return { x, y, scale }
     },
     ...mapMutations('player', {
-      setFullScreen: 'SET_FULL_SCREEN'
+      setFullScreen: 'SET_FULL_SCREEN',
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
     })
   }
 }
@@ -192,7 +263,6 @@ export default {
           font-size: $font-size-large-x;
           color: $color-theme;
           transform: rotate(-90deg);
-
         }
       }
       .title{
@@ -238,10 +308,13 @@ export default {
             box-sizing: border-box;
             border: px2rem(20px) solid rgba(255,255,255,0.1);
             border-radius: 50%;
+            &.play{
+              animation: rotate 20s linear infinite;
+            }
+            &.pause{
+              animation-play-state: paused;
+            }
             .image{
-              position: absolute;
-              top: 0;
-              left: 0;
               width: 100%;
               height: 100%;
               border-radius: 50%;
