@@ -36,7 +36,7 @@
           <div class="progress-wrapper">
             <span class="time time-l">{{_format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
-              <progress-bar :percent="percent"></progress-bar>
+              <progress-bar :percent="percent" @percentChange="onPercentChange"></progress-bar>
             </div>
             <span class="time time-r">{{_format(currentSong.duration)}}</span>
           </div>
@@ -224,6 +224,12 @@ export default {
     },
     togglePlay () {
       this.setPlayingState(!this.playing)
+    },
+    onPercentChange (percent) {
+      let audio = this.$refs.audio
+      audio.currentTime = this.currentSong.duration * percent
+      // 如果当前是暂停的 拖动后直接播放
+      if (!this.playing) this.togglePlay()
     },
     _getPosAndScale () {
       const targetWidth = 40 // 底部mini的专辑图标宽度
