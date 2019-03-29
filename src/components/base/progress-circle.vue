@@ -28,7 +28,7 @@ export default {
     }
   },
   data () {
-    return  {
+    return {
       dashArray: Math.PI * 100
     }
   },
